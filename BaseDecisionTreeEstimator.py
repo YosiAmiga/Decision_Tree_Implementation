@@ -3,7 +3,11 @@ import Node
 import pandas as pd
 from Node import Node
 
-
+"""
+Base Decision Tree Class:
+The parent of Classification and Regressor Trees.
+each field is adjust according to the selected DT type.
+"""
 class BaseDecisionTreeEstimator:
     def __init__(self,
                  tol,
@@ -19,21 +23,24 @@ class BaseDecisionTreeEstimator:
         self.split_method = split_method
         self.max_features = max_features
 
+    # a method to fit the given training data of the features and the predicted classes.
+    # X and y are the data to be given to train on.
     def fit(self, X, y, weights=None):
         self.tree_ = Node()
         X_ = self._get_values(X)
         y_ = self._get_values(y)
         self.weights_ = weights
-
+        # decide the split method
         if self.split_method == 'binary':
             feature_types = None
         elif self.split_method == 'nary':
             feature_types = [self.__check_type(X_[:, column]) for column in range(X.shape[1])]
         else:
             raise ValueError('parameter split_method must be binary or nary')
-
+        # create the tree
         self.__generate_tree(self.tree_, X_, y_, weights, feature_types)
 
+    # a method to create the tree from the given X,y data, weights if necessary, and features types
     def __generate_tree(self, tree, X, y, weights, feature_types):
         if len(y) <= self.min_members:
             self._label_node(tree, y)
@@ -71,20 +78,25 @@ class BaseDecisionTreeEstimator:
             branch_weights = weights[branch_indices] if weights is not None else None
             self.__generate_tree(new_node, X[branch_indices], y[branch_indices], branch_weights, feature_types)
 
+    # Method to decide the split attribute from the given X and y data.
     def __split_attribute(self, tree, X, y, weights, feature_types=None):
         min_impurity = np.inf
         impurity = min_impurity
         best_feature = None
         best_split_value = None
-
+        # a list for all the features from given data
         features = []
+        #Arange the data from lowest to highest value
         if not self.max_features:
             features = np.arange(X.shape[1])
         elif self.max_features == 'auto':
             features = np.random.choice(X.shape[1], size=np.sqrt(X.shape[1]).astype('int'), replace=False)
         else:
             features = np.random.choice(X.shape[1], size=self.max_features, replace=False)
-
+        #Run on all the features and for each one calculate the impurity.
+        #The best one will be the root of the DT.
+        #after sorting all the features and doing several calculations, return the:
+        # best feature, best split value, and best impurity,
         for feature in features:
             tree.feature = feature
             X_feature = X[:, feature]
@@ -120,16 +132,18 @@ class BaseDecisionTreeEstimator:
 
     def _label_node(self, node, y):
         pass
-
+    # The method to decide for a given X data and
     def _decide(self, node, X, pred, indices):
+        #If it is a leaf node, set the prediction to be the label of the node and return.
         if node.leaf:
             pred[indices] = node.label
             return
-
+        #Get all the X data values as branches and use the split method.
+        #for each branch recursivly call the decide method until reaching a leaf and setting the label.
         branches = node.get_split_indices(X, indices)
         for index, branch in enumerate(branches):
             self._decide(node.children[index], X, pred, branch)
-
+    #for a given data, check its data type
     def __check_type(self, data):
         try:
             number_data = data.astype(np.number)
@@ -138,7 +152,7 @@ class BaseDecisionTreeEstimator:
             return 'num'
         except ValueError:
             return 'cat'
-
+    #for a given data, check if it is a known format of a dataframe and return the values.
     def _get_values(self, data):
         if isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
             return data.values

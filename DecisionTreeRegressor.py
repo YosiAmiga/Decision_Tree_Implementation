@@ -1,7 +1,11 @@
 from BaseDecisionTreeEstimator import BaseDecisionTreeEstimator
 import numpy as np
 
-
+"""
+Decision Tree Regressor Class:
+all the values the a Classifier DT uses are in the constructor of the Base DT that he inherit.
+set the default criterion to be MSE, and the split method to nary.
+"""
 class DecisionTreeRegressor(BaseDecisionTreeEstimator):
     def __init__(self,
                  tol=None,
@@ -11,14 +15,16 @@ class DecisionTreeRegressor(BaseDecisionTreeEstimator):
                  split_method='nary',
                  max_features=None):
         super().__init__(tol, max_depth, min_members, criterion, split_method, max_features)
-
+    # This function calculate the mean/median depending on the criterion.
+    # In out case it is always mean, default criterion is MSE.
     def _label_node(self, node, y):
         node.leaf = True
         if self.criterion == 'mse':
             node.label = np.mean(y)
         elif self.criterion == 'mae':
             node.label = np.median(y)
-
+    #The prediction function:
+    #For a given data X, predict the price (number) it will have to by the created DT Regressor.
     def predict(self, X):
         X_ = self._get_values(X)
         pred = np.full(X_.shape[0], 0.0)
@@ -27,6 +33,7 @@ class DecisionTreeRegressor(BaseDecisionTreeEstimator):
         # print('this is pred after deision tree traversal ', pred)
         return pred
 
+    # Returns the score of the given prediction, by using X and y data and comparing it to the actual result.
     def score(self, X, y):
         y_pred = self.predict(X) # vector of predictions --> numerically (regressor)
         y_m = np.mean(y) # calculate the mean(AVG) of the vector

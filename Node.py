@@ -1,6 +1,8 @@
 import numpy as np
 
-
+"""
+Node class will represent a feature in the data frame, each node we build in a DT will be from this class
+"""
 class Node:
     def __init__(self, feature=-1, split=None, impurity=np.inf, n_outputs=None):
         # Split feature
@@ -14,6 +16,7 @@ class Node:
         self.depth = 0
         self.n_outputs = None
 
+    # Get the depth of the given node, recursive function to calculate the tree height
     def get_depth(self):
         if self.leaf or len(self.children) == 0:
             return 1
@@ -51,7 +54,7 @@ class Node:
             probs[i] = len(y[y == y_i]) / y_len
 
         return probs
-
+    # Function to calculate the impurity of each feature, we select the criterion of impurity to calculate on.
     def calc_impurity(self, y, criterion, store=False):
         impurity = None
 
@@ -69,7 +72,7 @@ class Node:
         if store:
             self.impurity = impurity
         return impurity
-
+    # use the given criterion to calculate impurity for splitting the date
     def impurity_for_split(self, X, y, weights, criterion):
         splitted_indices = self.get_split_indices(X)
         impurities = np.zeros(len(splitted_indices))
@@ -88,6 +91,7 @@ class Node:
             impurities[index] = self.calc_impurity(y_branch, criterion) * total_branch_weight
         return np.sum(impurities) / total_weight
 
+    # Functions for each criterion: Entropy, GINI, MSE, MAE.
     def __calc_entropy(self, probs):
         entropy = -np.sum(probs * np.log(probs + 10e-10))
         return entropy
@@ -109,7 +113,7 @@ class Node:
 
     def __repr__(self):
         return 'Node(leaf={})'.format(self.leaf)
-
+    # Print function to visualize the data in a printing way
     def __print_state__(self):
         print(
             'split: \n', self.split, 'impurity ', self.impurity, 'children ', self.children, 'leaf ', self.leaf,

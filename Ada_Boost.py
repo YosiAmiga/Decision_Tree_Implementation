@@ -15,7 +15,7 @@ def get_error_rate(pred, Y):
 
 
 def print_error_rate(err):
-    print
+    err = 1-err
     'Error rate: Training: %.4f - Test: %.4f' % err
 
 
@@ -26,10 +26,9 @@ def generic_clf(Y_train, X_train, Y_test, X_test, clf):
     clf.fit(X_train, Y_train)
     pred_train = clf.predict(X_train)
     pred_test = clf.predict(X_test)
-    print('pred test ', pred_test)
-    print('pred train ', pred_train)
-    print('error rate train', get_error_rate(pred_train, Y_train), '\nerror rate test', \
-          get_error_rate(pred_test, Y_test))
+    # print('pred test ', pred_test)
+    # print('pred train ', pred_train)
+    print('The Adaboost score we implemented is', 1-get_error_rate(pred_test, Y_test))
     return get_error_rate(pred_train, Y_train), \
            get_error_rate(pred_test, Y_test)
 
@@ -92,6 +91,8 @@ def plot_error_rate(er_train, er_test):
 
 def main():
     df = pd.read_csv('data.csv')  # Convert csv file to data frame
+
+    """Split the data into clf test & train"""
     df['area_type'] = pd.factorize(df['area_type'])[0]
     # Prepare the data data
     features = list(df.columns[2:9])
@@ -101,28 +102,25 @@ def main():
     X_Features = df[features]
 
     # split the data into: train , validation , test sub dataframes
-
+    # X_@ - split the features data by rows that were requested,  from the X_Features column only!
     X_train = X_Features.iloc[:8041, :]
     X_validation = X_Features.iloc[8041:10051, :]
     X_test = X_Features.iloc[10051:12563, :]
 
+    # y_@ - split the classes data by rows that were requested, from the y_classes column only!
     Y_train = y_classes.iloc[:8041, ]
     y_validation = y_classes.iloc[8041:10051, ]
     Y_test = y_classes.iloc[10051:12563, ]
 
     # Fit a simple decision tree first
     clf_tree = DecisionTreeClassifier.DecisionTreeClassifier()
-    print('Created a simple decision tree')
     er_tree = generic_clf(Y_train, X_train, Y_test, X_test, clf_tree)
-    print('##### finished generic clf #####')
     # Fit Adaboost classifier using a decision tree as base estimator
     # Test with different number of iterations
     er_train, er_test = [er_tree[0]], [er_tree[1]]
-    print('error train', er_train)
-    print('error test', er_test)
-    i = 1
-    er_i = adaboost_clf(Y_train, X_train, Y_test, X_test, i, clf_tree)
+    stumps = 50
+    er_i = adaboost_clf(Y_train, X_train, Y_test, X_test, stumps, clf_tree)
+    # er_i = adaboost_clf(y_validation, X_validation, Y_test, X_test, stumps, clf_tree)
     er_train.append(er_i[0])
     er_test.append(er_i[1])
-    # optional plot the error
-    plot_error_rate(er_train, er_test)
+
